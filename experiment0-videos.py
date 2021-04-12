@@ -21,18 +21,21 @@ data = data[data.id.str.startswith('BAA')]                        # take only pr
 data = aeon.sessionduration(data)                                 # compute session duration
 print(data.groupby('id').apply(lambda g:g[:].drop('id', axis=1))) # print session summary grouped by id
 
-def exportvideo(path, prefix, workflow, framerate, start, end):
+def exportvideo(path, prefix, workflow, framerate, start, end, **kwargs):
     """Exports and analyses a continuous session video segment."""
     videoclip = aeon.videoclip(root, prefix, start, end)          # get top video clip between start and end
     videoinfo = '{0}/{1}-Clips.csv'.format(path, prefix)          # get clip segment info file name
     videoclip.to_csv(videoinfo)                                   # save top video clip segment info
-    subprocess.call([                                             # call bonsai passing all workflow arguments
+    args = [                                                      # assemble required workflow arguments
         bonsai,
         workflow,
         '-p:ChunkFile={0}'.format(videoinfo),
         '-p:TrackingFile={0}'.format('{0}/{1}.csv'.format(path, prefix)),
         '-p:VideoFile={0}'.format('{0}/{1}.avi'.format(path, prefix)),
-        '-p:FrameRate={0}'.format(framerate)])
+        '-p:FrameRate={0}'.format(framerate)]
+    for key, value in kwargs.items():                             # add any extra keyword arguments
+        args.append('-p:{0}={1}'.format(key, value))
+    subprocess.call(args)                                         # call bonsai passing all workflow arguments
 
 for session in data.itertuples():                                 # for all sessions
     start = session.Index                                         # session start time is session index
@@ -41,5 +44,8 @@ for session in data.itertuples():                                 # for all sess
     path = '{0}/{1}/{2}'.format(output, session.id, fname)        # format the full name of the output folder
     print('Exporting {0}...'.format(path))                        # print progress report
     os.makedirs(path, exist_ok=True)                              # ensure output 
-    exportvideo(path, 'FrameTop', tracking, 50, start, end)       # track and export top video
+    exportvideo(path, 'FrameTop', tracking, 50, start, end,       # track and export top video
+                Threshold=36,
+                CropRegion='10,186,1284,640',
+                CropOffset='10,186')
     exportvideo(path, 'FrameSide', export, 125, start, end)       # export side video
