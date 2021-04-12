@@ -12,7 +12,7 @@
       </Expression>
       <Expression xsi:type="io:CsvReader">
         <io:FileName />
-        <io:ScanPattern>%i,%i,%s</io:ScanPattern>
+        <io:ScanPattern>%s,%i,%i</io:ScanPattern>
         <io:SkipRows>1</io:SkipRows>
       </Expression>
       <Expression xsi:type="CreateObservable">
@@ -28,13 +28,10 @@
             <Expression xsi:type="SubscribeSubject">
               <Name>ChunkParameters</Name>
             </Expression>
-            <Expression xsi:type="MemberSelector">
-              <Selector>Item1,Item3</Selector>
-            </Expression>
             <Expression xsi:type="PropertyMapping">
               <PropertyMappings>
-                <Property Name="StartPosition" Selector="Item1" />
-                <Property Name="FileName" Selector="Item2" />
+                <Property Name="FileName" Selector="Item1" />
+                <Property Name="StartPosition" Selector="Item2" />
               </PropertyMappings>
             </Expression>
             <Expression xsi:type="Combinator">
@@ -51,7 +48,7 @@
               <Name>ChunkParameters</Name>
             </Expression>
             <Expression xsi:type="MemberSelector">
-              <Selector>Item2</Selector>
+              <Selector>Item3</Selector>
             </Expression>
             <Expression xsi:type="PropertyMapping">
               <PropertyMappings>
@@ -100,19 +97,18 @@
             <Edge From="0" To="1" Label="Source1" />
             <Edge From="2" To="3" Label="Source1" />
             <Edge From="3" To="4" Label="Source1" />
-            <Edge From="4" To="5" Label="Source1" />
-            <Edge From="5" To="9" Label="Source1" />
+            <Edge From="4" To="8" Label="Source1" />
+            <Edge From="5" To="6" Label="Source1" />
             <Edge From="6" To="7" Label="Source1" />
-            <Edge From="7" To="8" Label="Source1" />
-            <Edge From="8" To="9" Label="Source2" />
+            <Edge From="7" To="8" Label="Source2" />
+            <Edge From="8" To="9" Label="Source1" />
+            <Edge From="8" To="14" Label="Source2" />
             <Edge From="9" To="10" Label="Source1" />
-            <Edge From="9" To="15" Label="Source2" />
             <Edge From="10" To="11" Label="Source1" />
             <Edge From="11" To="12" Label="Source1" />
             <Edge From="12" To="13" Label="Source1" />
             <Edge From="13" To="14" Label="Source1" />
             <Edge From="14" To="15" Label="Source1" />
-            <Edge From="15" To="16" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
