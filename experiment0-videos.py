@@ -45,7 +45,5 @@ for session in data.itertuples():                                 # for all sess
     print('Exporting {0}...'.format(path))                        # print progress report
     os.makedirs(path, exist_ok=True)                              # ensure output 
     exportvideo(path, 'FrameTop', tracking, 50, start, end,       # track and export top video
-                Threshold=36,
-                CropRegion='10,186,1284,640',
-                CropOffset='10,186')
+                Threshold=36)
     exportvideo(path, 'FrameSide', export, 125, start, end)       # export side video

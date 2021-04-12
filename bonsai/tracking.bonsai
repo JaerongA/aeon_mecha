@@ -81,10 +81,10 @@
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="cv:Crop">
                 <cv:RegionOfInterest>
-                  <cv:X>0</cv:X>
-                  <cv:Y>0</cv:Y>
-                  <cv:Width>0</cv:Width>
-                  <cv:Height>0</cv:Height>
+                  <cv:X>10</cv:X>
+                  <cv:Y>186</cv:Y>
+                  <cv:Width>1284</cv:Width>
+                  <cv:Height>640</cv:Height>
                 </cv:RegionOfInterest>
               </Combinator>
             </Expression>
@@ -106,8 +106,8 @@
                 <cv:Mode>External</cv:Mode>
                 <cv:Method>ChainApproxNone</cv:Method>
                 <cv:Offset>
-                  <cv:X>0</cv:X>
-                  <cv:Y>0</cv:Y>
+                  <cv:X>10</cv:X>
+                  <cv:Y>186</cv:Y>
                 </cv:Offset>
                 <cv:MinArea xsi:nil="true" />
                 <cv:MaxArea xsi:nil="true" />
@@ -156,6 +156,7 @@
         <io:Overwrite>false</io:Overwrite>
         <io:Suffix>None</io:Suffix>
         <io:IncludeHeader>false</io:IncludeHeader>
+        <io:Selector>Item1</io:Selector>
       </Expression>
       <Expression xsi:type="MemberSelector">
         <Selector>Item2</Selector>
@@ -164,7 +165,7 @@
         <Combinator xsi:type="cv:VideoWriter">
           <cv:FileName />
           <cv:Suffix>None</cv:Suffix>
-          <cv:Buffered>true</cv:Buffered>
+          <cv:Buffered>false</cv:Buffered>
           <cv:Overwrite>false</cv:Overwrite>
           <cv:FourCC>FMP4</cv:FourCC>
           <cv:FrameRate>30</cv:FrameRate>
