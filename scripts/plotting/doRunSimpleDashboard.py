@@ -5,6 +5,7 @@ import argparse
 import numpy as np
 import pandas as pd
 import datetime
+import scipy.interpolate
 import time
 
 import flask
@@ -35,8 +36,8 @@ def main(argv):
     parser.add_argument("--nest_coordinates", help="coordinates of nest", default="170,260,450,540")
     parser.add_argument("--patchesToPlot", help="Names of patches to plot", default="Patch1,Patch2")
     parser.add_argument("--sample_rate_for_trajectory0", help="Initial value for the sample rate for the trajectory", default=0.5, type=float)
-    parser.add_argument("--win_length_sec", help="Moving average window length (sec)", default=60.0, type=float)
-    parser.add_argument("--reward_rate_time_resolution", help="Time resolution to compute the moving average (sec)", default=0.01, type=float)
+    parser.add_argument("--reward_rate_time_resolution", help="Time resolution to compute the moving average (sec)", default=0.1, type=float)
+    parser.add_argument("--reward_rate_ma_win_length", help="Reward rate moving average window length", default="60s")
     parser.add_argument("--pellet_event_name", help="Pellet event name to display", default="TriggerPellet")
     parser.add_argument("--xlabel_trajectory", help="xlabel for trajectory plot", default="x (pixels)")
     parser.add_argument("--ylabel_trajectory", help="ylabel for trajectory plot", default="y (pixels)")
@@ -63,8 +64,8 @@ def main(argv):
     nest_coordinates_matrix = np.matrix(args.nest_coordinates)
     patches_to_plot = args.patchesToPlot.split(",")
     sample_rate_for_trajectory0 = args.sample_rate_for_trajectory0
-    win_length_sec = args.win_length_sec
     reward_rate_time_resolution = args.reward_rate_time_resolution
+    reward_rate_ma_win_length = args.reward_rate_ma_win_length
     pellet_event_name = args.pellet_event_name
     xlabel_trajectory = args.xlabel_trajectory
     ylabel_trajectory = args.ylabel_trajectory
@@ -198,7 +199,7 @@ def main(argv):
     @app.callback([Output('trajectoryGraph', 'figure'),
                    Output('activitiesGraph', 'figure'),
                    Output('travelledDistanceGraph', 'figure'),
-                   # Output('rewardRateGraph', 'figure'),
+                   Output('rewardRateGraph', 'figure'),
                    Output('plotsContainer', 'hidden'),
                    Output('plotButton', 'children'),
                   ],
@@ -295,34 +296,31 @@ def main(argv):
         pellets_seconds = {}
         reward_rate = {}
         max_reward_rate = -np.inf
-        time = np.arange(t0_relative, tf_relative, reward_rate_time_resolution)
         for patch_to_plot in patches_to_plot:
-            wheel_encoder_vals = aeon.preprocess.api.encoderdata(root, patch_to_plot, start=t0_absolute, end=tf_absolute)
             pellet_vals = aeon.preprocess.api.pelletdata(root, patch_to_plot, start=t0_absolute, end=tf_absolute)
             pellets_times = pellet_vals[pellet_vals.event == "{:s}".format(pellet_event_name)].index
             pellets_seconds[patch_to_plot] = (pellets_times-session_start).total_seconds()
-            pellets_indices = ((pellets_seconds[patch_to_plot]-t0_relative)/reward_rate_time_resolution).astype(int)
-            pellets_samples = np.zeros(len(time), dtype=np.double)
-            pellets_samples[pellets_indices] = 1.0
-            win_length_samples = int(win_length_sec/reward_rate_time_resolution)
-            reward_rate[patch_to_plot] = aeon.signalProcessing.utils.moving_average(values=pellets_samples, N=win_length_samples)
-            patch_max_reward_rate = max(reward_rate[patch_to_plot])
-            if patch_max_reward_rate>max_reward_rate:
+            pellets_events = pd.DataFrame(index=pd.TimedeltaIndex(data=pellets_seconds[patch_to_plot], unit="s"), data=np.ones(len(pellets_seconds[patch_to_plot])), columns=['count'])
+            boundary_df = pd.DataFrame(index=pd.TimedeltaIndex(data=[t0_relative, tf_relative], unit="s"), data=dict(count=[0.0, 0.0]), columns=['count'])
+            pellets_events = pellets_events.append(other=boundary_df)
+            pellets_events.sort_index(inplace=True)
+            # pellets_seconds[patch_to_plot] = 
+            pellets_events_binned = pellets_events.resample("{:f}S".format(reward_rate_time_resolution)).sum()
+            pellets_events_ma = pellets_events_binned.rolling(window=reward_rate_ma_win_length, center=True).mean()
+            reward_rate[patch_to_plot] = pellets_events_ma
+            patch_max_reward_rate = reward_rate[patch_to_plot].max().item()
+            if patch_max_reward_rate > max_reward_rate:
                 max_reward_rate = patch_max_reward_rate
 
         fig_rewardRate = go.Figure()
         fig_rewardRate = plotly.subplots.make_subplots(rows=1, cols=len(patches_to_plot),
                                                        subplot_titles=(patches_to_plot))
         for i, patch_to_plot in enumerate(patches_to_plot):
-            trace = go.Scatter(x=time+win_length_sec/2.0,
-                                y=reward_rate[patch_to_plot],
-                                line=dict(color=reward_rate_trace_color),
-                                showlegend=False)
+            trace = go.Scatter(x=reward_rate[patch_to_plot].index.total_seconds(), y=reward_rate[patch_to_plot].iloc[:, 0], line=dict(color=reward_rate_trace_color), showlegend=False)
             fig_rewardRate.add_trace(trace, row=1, col=i+1)
-            for pellet_second in pellets_seconds[patch_to_plot]:
-                fig_rewardRate.add_vline(x=pellet_second, line_color=pellet_line_color,
-                            line_dash=pellet_line_style, row=1, col=i+1)
-            if i==0:
+            trace = aeon.plotting.plot_functions.get_pellets_trace(pellets_seconds=pellets_seconds[patch_to_plot], marker_color=pellet_color)
+            fig_rewardRate.add_trace(trace, row=1, col=i+1)
+            if i == 0:
                 fig_rewardRate.update_yaxes(title_text=ylabel_rewardRate, range=(0, max_reward_rate), row=1, col=i+1)
             else:
                 fig_rewardRate.update_yaxes(range=(0, max_reward_rate), row=1, col=i+1)
@@ -331,8 +329,8 @@ def main(argv):
         plotsContainer_hidden = False
         plotButton_children = ["Update"]
 
-        # return fig_trajectory, fig_cumTimePerActivity, fig_travelledDistance, fig_rewardRate, plotsContainer_hidden, plotButton_children
-        return fig_trajectory, fig_cumTimePerActivity, fig_travelledDistance, plotsContainer_hidden, plotButton_children
+        return fig_trajectory, fig_cumTimePerActivity, fig_travelledDistance, fig_rewardRate, plotsContainer_hidden, plotButton_children
+#         return fig_trajectory, fig_cumTimePerActivity, fig_travelledDistance, plotsContainer_hidden, plotButton_children
 #         return fig_trajectory, fig_cumTimePerActivity, plotsContainer_hidden, plotButton_children
 
     if(args.local):
