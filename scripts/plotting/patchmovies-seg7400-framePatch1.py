@@ -35,10 +35,10 @@ reward2 = pellets2[pellets2.event == 'PelletDetected']            # get timestam
 pellets1 = pellets1[pellets1.event == 'TriggerPellet']            # get timestamps of pellets delivered at patch1
 pellets2 = pellets2[pellets2.event == 'TriggerPellet']            # get timestamps of pellets delivered at patch2
 
-video_fps = 50 # Hz
+video_fps = 125 # Hz
 pixelscale = 0.00192 # 1 px = 1.92 mm
 framesize = (1440, 1080)
-video = aeon.videodata(root, 'FrameTop', start=start, end=end)    # get video frame metadata between start and end
+video = aeon.videodata(root, 'FramePatch1', start=start, end=end)    # get video frame metadata between start and end
 position = aeon.positiondata(root, start=start, end=end)          # get position data between start and end
 position.x = position.x * pixelscale
 position.y = position.y * pixelscale
@@ -68,7 +68,7 @@ wheel_ax.plot(wheel1_seg)
 
 # setup dynamic plot export
 fourcc = cv2.VideoWriter_fourcc('m','p','4','v')
-writer = cv2.VideoWriter('seg7400-frameTop.avi', fourcc, video_fps, (1920, 1440))
+writer = cv2.VideoWriter('seg7400-framePatch1.avi', fourcc, video_fps, (1920, 1440))
 
 for i, frame in enumerate(movie):
     print(i)
@@ -90,7 +90,7 @@ for i, frame in enumerate(movie):
     fig.canvas.draw()
     w, h = fig.canvas.get_width_height()
     img = np.frombuffer(fig.canvas.buffer_rgba(), np.uint8).reshape(h, w, -1)
-    img = cv2.cvtColor(img, cv2.cv2.COLOR_RGBA2BGR)
+    img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGR)
     writer.write(img)
 writer.release()
 
