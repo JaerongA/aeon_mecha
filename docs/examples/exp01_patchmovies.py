@@ -66,8 +66,10 @@ for session in data.itertuples():                                     # for all 
     distp2 = distance(position, (p2x, p2y))
     in_corridor = (dist0 < outer) & (dist0 > inner)
     in_nest = dist0 > outer
-    in_patch1 = activepatch(wheel1, distp1 < patchradius, position)
-    in_patch2 = activepatch(wheel2, distp2 < patchradius, position)
+    # in_patch1 = activepatch(wheel1, distp1 < patchradius, position)
+    in_patch1 = activepatch(wheel1, distp1 < patchradius)
+    # in_patch2 = activepatch(wheel2, distp2 < patchradius, position)
+    in_patch2 = activepatch(wheel2, distp2 < patchradius)
     in_arena = ~in_corridor & ~in_nest & ~in_patch1 & ~in_patch2
     ethogram = pd.Series('other', index=position.index)
     ethogram[in_corridor] = 'corridor'
@@ -162,4 +164,3 @@ for session in data.itertuples():                                     # for all 
         writer.write(img)
     writer.release()
     plt.close(fig)
-    break
