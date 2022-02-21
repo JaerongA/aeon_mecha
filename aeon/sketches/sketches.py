@@ -1,20 +1,24 @@
+# %%
 import datajoint as dj
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
+# %%
 dj.config["database.user"] = "vplattner"
-
+dj.config["database.password"] = "vplattner-aeon"
 dj.conn()
+
+# %%
 dj.list_schemas()
 
+# %%
 dj.config["display.limit"] = 15  # limit number of displayed rows
 dj.config["display.width"] = 25  # limit number of displayed columns
-
 _use_virtual_module = True
-
 _db_prefix = "aeon_"
 
+# %%
 if _use_virtual_module:
     acquisition = dj.create_virtual_module("acquisition", _db_prefix + "acquisition")
     analysis = dj.create_virtual_module("analysis", _db_prefix + "analysis")
@@ -26,7 +30,7 @@ else:
     dj.config.update(custom={**dj.config.get("custom", {}), "database.prefix": _db_prefix})
     from aeon.dj_pipeline import acquisition, analysis, lab, subject, tracking
 
-
+# %%
 def check_fetch_len(key, length=1):
     """
     Check that a key is of a certain length
@@ -41,7 +45,7 @@ def check_fetch_len(key, length=1):
     if not len(key) == length:
         raise ValueError(f"Key must be of length {length}")
 
-
+# %%
 def position_concat(session_key, acquisition, tracking, pixel_scale=0.00192):
     """
     Concatenate position data into a single pandas DataFrame
@@ -85,21 +89,24 @@ def position_concat(session_key, acquisition, tracking, pixel_scale=0.00192):
     return pd.DataFrame(sess_key).set_index("timestamps")
 
 
-
+# %%
 acquisition.Session()
 
+# %%
 from dplython import select, DplyFrame, X, arrange, count, sift, head, summarize, group_by, tail, mutate
 import pandas as pd
 
+# %%
 acquisition.SessionEnd()
 
+# %%
 frame = pd.DataFrame(acquisition.SessionEnd())
 dpl_frame = DplyFrame(frame)
 dpl_frame
 
 dpl_frame >> select(X.subject) >> head(10)
 
-
+# %%
 tracking.SubjectPosition()
 
 frame = pd.DataFrame(tracking.SubjectPosition())
@@ -107,5 +114,19 @@ dpl_frame = DplyFrame(frame)
 dpl_frame >> select(X.speed) >> head(10)
 
 
-
+# %%
 analysis.SessionRewardRate & 'subject = "BAA-1099790"'
+
+#%%
+key_source = (acquisition.Session
+                  & (acquisition.Session * acquisition.SessionEnd * acquisition.TimeSlice
+                     & 'time_slice_end = session_end').proj())
+
+
+
+#%%
+session_start, session_end = (acquisition.Session * acquisition.SessionEnd & key).fetch1(
+            'session_start', 'session_end')
+#%%
+
+acquisition.TimeSlice()

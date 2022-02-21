@@ -6,8 +6,8 @@ import pandas as pd
 
 from aeon.preprocess import api as aeon_api
 
-from . import lab, subject
-from . import get_schema_name, paths
+from aeon.dj_pipeline import lab, subject
+from aeon.dj_pipeline import get_schema_name, paths
 
 
 schema = dj.schema(get_schema_name('acquisition'))

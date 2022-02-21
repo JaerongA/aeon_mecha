@@ -12,8 +12,8 @@ from aeon.preprocess import api as aeon_api
 from aeon.util import plotting as aeon_plotting
 from aeon.util import utils as aeon_utils
 
-from . import lab, acquisition, tracking
-from . import get_schema_name
+from aeon.dj_pipeline import lab, acquisition, tracking
+from aeon.dj_pipeline import get_schema_name # get_schema_name: defined in init file
 
 
 schema = dj.schema(get_schema_name('analysis'))
