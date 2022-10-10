@@ -1,14 +1,30 @@
-import re
 import pathlib
+import re
 from datetime import datetime
+
+import pandas as pd
 import yaml
 
 from aeon.dj_pipeline import acquisition, lab
-from .. import dict_to_uuid
 
+from .. import dict_to_uuid
 
 _weight_scale_rate = 100
 _weight_scale_nest = 1
+_colony_csv_path = pathlib.Path("/ceph/aeon/aeon/colony/colony.csv")
+
+
+def ingest_subject(colony_csv_path: path.Pathlib = _colony_csv_path) -> None:
+    """Ingest subject information from the colony.csv file"""
+    colony_df = pd.read_csv(colony_csv_path, skiprows=[1, 2])
+    colony_df.rename(columns={"Id": "subject"}, inplace=True)
+
+    colony_df["sex"] = "U"
+    colony_df["subject_birth_date"] = "2021-01-01"
+    colony_df["subject_description"] = ""
+
+    subject.Subject.insert(colony_df, skip_duplicates=True, ignore_extra_fields=True)
+    subject.Subject()
 
 
 def extract_epoch_metadata(experiment_name, metadata_yml_filepath):
