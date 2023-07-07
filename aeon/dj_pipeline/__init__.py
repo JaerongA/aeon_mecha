@@ -1,8 +1,8 @@
+import hashlib
 import os
+import uuid
 
 import datajoint as dj
-import hashlib
-import uuid
 
 _default_database_prefix = os.getenv("DJ_DB_PREFIX") or "aeon_"
 _default_repository_config = {"ceph_aeon": "/ceph/aeon"}
@@ -15,6 +15,12 @@ db_prefix = dj.config["custom"].get("database.prefix", _default_database_prefix)
 
 repository_config = dj.config['custom'].get('repository_config',
                                             _default_repository_config)
+
+try:
+    from .utils import streams_maker
+    streams = dj.VirtualModule("streams", streams_maker.STREAMS_MODULE_NAME)
+except:
+    pass
 
 
 def get_schema_name(name):
