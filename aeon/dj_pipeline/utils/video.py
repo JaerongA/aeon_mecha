@@ -1,34 +1,34 @@
-import numpy as np
 import base64
-import pandas as pd
-import pathlib
 import datetime
-import cv2
+from pathlib import Path
 
+import cv2
+import numpy as np
+import pandas as pd
+
+import aeon.io.reader as io_reader
 from aeon.io import api as io_api
 from aeon.io import video as io_video
-import aeon.io.reader as io_reader
-
-
-camera_name = "CameraTop"
-start_time = datetime.datetime(2022, 4, 3, 13, 0, 0)
-end_time = datetime.datetime(2022, 4, 3, 15, 0, 0)
-raw_data_dir = pathlib.Path("/ceph/aeon/aeon/data/raw/AEON2/experiment0.2")
 
 
 def retrieve_video_frames(
+    experiment_name,
     camera_name,
     start_time,
     end_time,
+    raw_data_dir,
     desired_fps=50,
     start_frame=0,
     chunk_size=50,
     **kwargs,
 ):
-    # do some data loading
+    raw_data_dir = Path(raw_data_dir)
+    assert raw_data_dir.exists()
+
+    # Load video data
     videodata = io_api.load(
         root=raw_data_dir.as_posix(),
-        reader=io_reader.Video(camera_name),
+        reader=io_reader.Video(f"{camera_name}_*"),
         start=pd.Timestamp(start_time),
         end=pd.Timestamp(end_time),
     )
@@ -39,11 +39,6 @@ def retrieve_video_frames(
 
     framedata = videodata[start_frame : start_frame + chunk_size]
 
-    # downsample
-    # actual_fps = 1 / np.median(np.diff(videodata.index) / np.timedelta64(1, "s"))
-    # final_fps = min(desired_fps, actual_fps)
-    # ds_factor = int(np.around(actual_fps / final_fps))
-    # framedata = videodata[::ds_factor]
     final_fps = desired_fps
 
     # read frames

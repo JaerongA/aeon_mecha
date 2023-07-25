@@ -1,6 +1,6 @@
 import datajoint as dj
 
-from . import acquisition, get_schema_name, subject
+from . import get_schema_name
 
 schema = dj.schema(get_schema_name("lab"))
 
@@ -12,11 +12,11 @@ schema = dj.schema(get_schema_name("lab"))
 class Colony(dj.Lookup):
     # This table will interact with Bonsai directly.
     definition = """
-    -> subject.Subject
+    subject                 : varchar(32)
     ---
-    -> acquisition.Experiment
-    sex                     : enum('M', 'F', 'U')
-    dob                     : date  # date of birth
+    reference_weight=null   : float  
+    sex='U'                 : enum('M', 'F', 'U')
+    subject_birth_date=null                : date  # date of birth
     note=''                 : varchar(1024)
     """
 
