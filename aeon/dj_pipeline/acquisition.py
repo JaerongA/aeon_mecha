@@ -8,6 +8,7 @@ import pandas as pd
 from aeon.analysis import utils as analysis_utils
 from aeon.io import api as io_api
 from aeon.io import reader as io_reader
+from aeon.io import schemas as aeon_schema
 from aeon.schema import dataset as aeon_schema
 
 from . import get_schema_name
